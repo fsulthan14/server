@@ -1,0 +1,6 @@
+[Let gasiwfh modify system settings for network]
+Identity=unix-user:gasiwfh
+Action=org.freedesktop.NetworkManager.settings.modify.system
+ResultAny=no
+ResultInactive=no
+ResultActive=yes
