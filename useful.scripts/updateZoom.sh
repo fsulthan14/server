@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+## Contoh Versi: 6.4.3 (827). maka argumennya jadi : ./updateZoom.sh 6.4.3.827
+
 # Ambil versi dari argumen, jika ada
 ver="$1"
 cd /tmp || exit 1
