@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+url=https://dl.google.com/linux/direct/
+file=google-chrome-stable_current_amd64.deb
+
+cd /tmp
+
+echo "Downloading latest Google Chrome package..."
+echo
+
+wget -N "${url}${file}"
+downloadedVer=$(dpkg-deb -f $file Version)
+echo "Google Chrome  version ${downloadedVer} downloaded."
+
+dpkgReport=$(dpkg -l | grep google-chrome)
+
+pkgReport=$(dpkg -s google-chrome-stable 2>/dev/null)
+installedVer=$(echo "$dpkgReport" | grep '^Version:' | sed -e 's/Version: //')
+
+if [ "$installedVer" != "$downloadedVer" ]; then
+  echo "Installing $file"
+  echo
+  sudo dpkg -i $file
+  sudo apt-get install -f -y # To fix any dependency issues
+else
+  echo "Chrome is up to date"
+fi
