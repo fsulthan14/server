@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+if snap list firefox &>/dev/null; then
+  echo "Firefox terinstall via snap, sudah auto-update sendiri."
+  exit 0
+fi
+
+echo "Checking for Firefox updates..."
+sudo apt-get update -qq
+
+installedVer=$(dpkg -s firefox 2>/dev/null | grep '^Version:' | cut -d' ' -f2)
+sudo apt-get install --only-upgrade -y firefox
+updatedVer=$(dpkg -s firefox 2>/dev/null | grep '^Version:' | cut -d' ' -f2)
+
+if [ "$installedVer" != "$updatedVer" ]; then
+  echo "Firefox updated: $installedVer -> $updatedVer"
+else
+  echo "Firefox is up to date ($updatedVer)"
+fi
