@@ -1,8 +1,9 @@
-// Izinkan member group "sudo" menjalankan update-browsers.sh lewat pkexec
-// tanpa diminta password, supaya bisa jalan otomatis di background.
+// Izinkan member group "sudo" menjalankan updateChrome/updateFirefox lewat
+// pkexec tanpa diminta password, supaya bisa dipanggil di background.
 polkit.addRule(function(action, subject) {
+    var allowed = ["/usr/local/bin/updateChrome", "/usr/local/bin/updateFirefox"];
     if (action.id == "org.freedesktop.policykit.exec" &&
-        action.lookup("program") == "/usr/local/sbin/update-browsers.sh" &&
+        allowed.indexOf(action.lookup("program")) !== -1 &&
         subject.isInGroup("sudo")) {
         return polkit.Result.YES;
     }

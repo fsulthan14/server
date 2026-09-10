@@ -5,15 +5,10 @@ set -e
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-install -m 755 "$DIR/useful.scripts/updateChrome" /usr/local/sbin/updateChrome
-install -m 755 "$DIR/useful.scripts/updateFirefox" /usr/local/sbin/updateFirefox
-install -m 755 "$DIR/useful.scripts/update-browsers.sh" /usr/local/sbin/update-browsers.sh
+# `install` overwrites in place dengan permission yang sama tiap kali
+# dijalankan, jadi aman di-re-run (idempotent), tidak ada duplikasi.
+install -m 755 "$DIR/useful.scripts/updateChrome" /usr/local/bin/updateChrome
+install -m 755 "$DIR/useful.scripts/updateFirefox" /usr/local/bin/updateFirefox
+install -D -m 644 "$DIR/polkit/49-gasi-update-browsers.rules" /etc/polkit-1/rules.d/49-gasi-update-browsers.rules
 
-install -m 644 "$DIR/polkit/49-gasi-update-browsers.rules" /etc/polkit-1/rules.d/49-gasi-update-browsers.rules
-
-install -m 644 "$DIR/systemd/gasi-update-browsers.service" /etc/systemd/user/gasi-update-browsers.service
-install -m 644 "$DIR/systemd/gasi-update-browsers.timer" /etc/systemd/user/gasi-update-browsers.timer
-
-systemctl --global enable gasi-update-browsers.timer
-
-echo "Selesai. Timer aktif untuk semua user (systemd --user) setelah mereka login berikutnya."
+echo "Terpasang: /usr/local/bin/updateChrome, /usr/local/bin/updateFirefox"

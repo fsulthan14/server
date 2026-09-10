@@ -1,6 +1,0 @@
-[Unit]
-Description=Update Chrome and Firefox in background
-
-[Service]
-Type=oneshot
-ExecStart=/usr/bin/pkexec /usr/local/sbin/update-browsers.sh
