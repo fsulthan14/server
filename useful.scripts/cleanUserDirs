@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+# Bersihin folder user di Ubuntu Desktop: Desktop, Downloads, Pictures, Videos,
+# Trash, cache, dan daftar file terakhir dibuka. Tiap folder ditanya dulu (y/N).
+# Penghapusan PERMANEN, tidak lewat Trash.
+# Jalankan sebagai user biasa (tanpa sudo).
+set -u
+
+if [[ $EUID -eq 0 ]]; then
+  echo "Jangan pakai sudo, jalankan sebagai user biasa: cleanUserDirs"
+  exit 1
+fi
+
+confirm() {
+  local ans
+  read -rp "$1 [y/N] " ans
+  [[ $ans =~ ^[yY]$ ]]
+}
+
+# Nama folder ikut bahasa sistem (misal "Unduhan"), jadi ambil dari xdg-user-dir.
+# xdg-user-dir balikin $HOME kalau folder tidak di-set, itu jangan sampai dipakai.
+userDir() {
+  local dir
+  dir=$(xdg-user-dir "$1" 2>/dev/null)
+  if [ -z "$dir" ] || [ "$dir" = "$HOME" ]; then
+    dir="$HOME/$2"
+  fi
+  echo "$dir"
+}
+
+cleanDir() {
+  local label=$1 dir=${2%/}
+
+  case "$dir" in
+    ""|/|"$HOME")
+      echo "$label: path tidak aman ($dir), skip."
+      return
+      ;;
+  esac
+
+  if [ ! -d "$dir" ]; then
+    echo "$label: folder tidak ada, skip."
+    return
+  fi
+
+  local count size
+  count=$(find "$dir" -mindepth 1 -maxdepth 1 | wc -l)
+  if [ "$count" -eq 0 ]; then
+    echo "$label: sudah kosong."
+    return
+  fi
+  size=$(du -sh "$dir" 2>/dev/null | cut -f1)
+
+  if confirm "Hapus isi $label ($dir): $count item, $size?"; then
+    if find "$dir" -mindepth 1 -delete; then
+      echo "$label dibersihkan."
+    else
+      echo "$label: sebagian gagal dihapus."
+    fi
+  else
+    echo "$label di-skip."
+  fi
+}
+
+cleanDir "Desktop" "$(userDir DESKTOP Desktop)"
+cleanDir "Downloads" "$(userDir DOWNLOAD Downloads)"
+cleanDir "Pictures" "$(userDir PICTURES Pictures)"
+cleanDir "Videos" "$(userDir VIDEOS Videos)"
+cleanDir "Trash" "$HOME/.local/share/Trash"
+cleanDir "Cache" "$HOME/.cache"
+
+recent="$HOME/.local/share/recently-used.xbel"
+if [ -f "$recent" ] && confirm "Hapus daftar file terakhir dibuka ($recent)?"; then
+  rm -f "$recent" && echo "Daftar file terakhir dibuka dihapus."
+fi
+
+echo "Selesai."
