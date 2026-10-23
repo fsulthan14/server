@@ -3,6 +3,6 @@
 set -e
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-for f in "$DIR"/updateChrome "$DIR"/updateFirefox "$DIR"/clearBrowserHistory "$DIR"/cleanUserDirs "$DIR"/../install.sh "$DIR"/../run.sh; do
+for f in "$DIR"/updateChrome "$DIR"/updateFirefox "$DIR"/clearBrowserHistory "$DIR"/cleanUserDirs "$DIR"/../install.sh "$DIR"/../run.sh "$DIR"/../run-admin.sh; do
   bash -n "$f" && echo "OK: $f"
 done
