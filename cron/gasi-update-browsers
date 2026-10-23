@@ -1,0 +1,8 @@
+# Dipasang ke /etc/cron.d/gasi-update-browsers oleh install.sh.
+# Update Chrome & Firefox otomatis tiap hari. Jamnya dibedain supaya
+# tidak rebutan lock apt. Log: /var/log/gasi-update-browsers.log
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+0 10 * * * root /usr/local/bin/updateChrome >> /var/log/gasi-update-browsers.log 2>&1
+30 10 * * * root /usr/local/bin/updateFirefox >> /var/log/gasi-update-browsers.log 2>&1
