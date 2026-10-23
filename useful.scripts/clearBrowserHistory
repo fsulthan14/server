@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+# Hapus history browsing Firefox & Google Chrome milik user yang menjalankan.
+# Bookmark, password, cookie/login, dan ekstensi TIDAK disentuh.
+# Jalankan sebagai user biasa (tanpa sudo).
+set -u
+
+if [[ $EUID -eq 0 ]]; then
+  echo "Jangan pakai sudo, jalankan sebagai user biasa: clearBrowserHistory"
+  exit 1
+fi
+
+shopt -s nullglob
+
+clearFirefox() {
+  if pgrep -x 'firefox|firefox-bin' &>/dev/null; then
+    echo "Firefox masih jalan, tutup dulu lalu ulangi. Firefox di-skip."
+    return
+  fi
+
+  local dbs=(
+    "$HOME"/.mozilla/firefox/*/places.sqlite
+    "$HOME"/snap/firefox/common/.mozilla/firefox/*/places.sqlite
+  )
+  if [ ${#dbs[@]} -eq 0 ]; then
+    echo "Profil Firefox tidak ditemukan."
+    return
+  fi
+
+  if ! command -v sqlite3 &>/dev/null; then
+    echo "sqlite3 belum ada, install dulu: sudo apt install sqlite3. Firefox di-skip."
+    return
+  fi
+
+  local db
+  for db in "${dbs[@]}"; do
+    # Tabel metadata cuma ada di Firefox versi baru, jadi error-nya diabaikan.
+    sqlite3 "$db" "DELETE FROM moz_places_metadata_search_queries; DELETE FROM moz_places_metadata;" 2>/dev/null
+
+    # Place yang dibookmark punya foreign_count > 0, jadi tidak ikut terhapus.
+    if sqlite3 "$db" "
+      DELETE FROM moz_historyvisits;
+      DELETE FROM moz_inputhistory;
+      DELETE FROM moz_annos WHERE place_id IN (SELECT id FROM moz_places WHERE foreign_count = 0);
+      DELETE FROM moz_places WHERE foreign_count = 0;
+      UPDATE moz_places SET visit_count = 0, last_visit_date = NULL;
+      DELETE FROM moz_origins WHERE id NOT IN (SELECT origin_id FROM moz_places);
+      VACUUM;"; then
+      echo "Firefox dibersihkan: $(dirname "$db")"
+    else
+      echo "Gagal membersihkan Firefox: $(dirname "$db")"
+    fi
+  done
+}
+
+clearChrome() {
+  if pgrep -f '/opt/google/chrome/chrome' &>/dev/null; then
+    echo "Chrome masih jalan, tutup dulu lalu ulangi. Chrome di-skip."
+    return
+  fi
+
+  local profiles=(
+    "$HOME"/.config/google-chrome/Default
+    "$HOME"/.config/google-chrome/Profile\ *
+  )
+  local found=0 profile
+  for profile in "${profiles[@]}"; do
+    [ -d "$profile" ] || continue
+    found=1
+    rm -f "$profile"/{History,History-journal,"Visited Links","Top Sites","Top Sites-journal",Shortcuts,Shortcuts-journal}
+    rm -f "$profile"/"Network Action Predictor"*
+    echo "Chrome dibersihkan: $profile"
+  done
+
+  [ $found -eq 1 ] || echo "Profil Chrome tidak ditemukan."
+}
+
+clearFirefox
+clearChrome
+echo "Selesai."
